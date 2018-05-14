@@ -1,0 +1,11 @@
+{
+  "name": "enum-polyfill",
+  "description": "A polyfill for my enum proposal",
+  "version": "0.0.1",
+  "author": "dwade <douglas.b.wade@gmail.com>",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git@code.corp.indeed.com:dwade/enum-polyfill.git"
+  }
+}
