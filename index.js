@@ -11,41 +11,48 @@ var freeSelf = typeof self == 'object' && self && self.Object === Object && self
 var root = freeGlobal || freeSelf || Function('return this')();
 
 // Adapted from https://github.com/doug-wade/proposal-enum-definitions
-const emptyValue = Symbol('empty value');
-root.PolyfilledEnumEmptyValue = emptyValue;
 root.PolyfilledEnum = function PolyfilledEnum(values) {
-  const constructedEnum = Object.freeze(
-    Object.create(null, {
-      [Symbol.enumSize]: {
+  const constructedEnum = Object.create(null, {
+    [Symbol.enumSize]: {
+      // Specification can define better semantics for deriving
+      // and storing the size of the enum object (internal slot)
+      value: values.length
+    },
+    [Symbol.iterator]: {
+      * value() {
         // Specification can define better semantics for deriving
-        // and storing the size of the enum object (internal slot)
-        value: values.length
-      },
-      [Symbol.iterator]: {
-        * value() {
-          // Specification can define better semantics for deriving
-          // and storing keys and values (internal slot)
-          let keys = Object.keys(values);
-          let index = 0;
-          while (index < keys.length) {
-            yield keys[index];
-            index++;
-          }
+        // and storing keys and values (internal slot)
+        let keys = Object.keys(values);
+        let index = 0;
+        while (index < keys.length) {
+          yield keys[index];
+          index++;
         }
-      },
-      values: function() {
-        return Object.keys(this);
-      },
-      memberOf: function(elem) {
-        return Object.values(this).includes(elem);
       }
-    });
-    for (const value of values) {
-      if (values[value] === emptyValue) {
-        constructedEnum[value] = Symbol(value.toString());
-      } else {
-        constructedEnum[value] = value;
-      }
-    }
-  );
+    },
+    keys: {
+      get: function() {
+        return function () { return Object.keys(this) };
+      },
+    },
+    values: {
+      get: function() {
+        return function () { return Object.values(this) };
+      },
+    },
+    entries: {
+      get: function() {
+        return function () { return Object.entries(this) };
+      },
+    },
+    memberOf: {
+      get: function() {
+        return function (elem) { return Object.values(this).includes(elem) };
+      },
+    },
+  });
+  for (const value in values) {
+    constructedEnum[value] = values[value];
+  }
+  return Object.freeze(constructedEnum);
 }
