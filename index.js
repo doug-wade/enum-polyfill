@@ -10,13 +10,15 @@ var freeSelf = typeof self == 'object' && self && self.Object === Object && self
 /** Used as a reference to the global object. */
 var root = freeGlobal || freeSelf || Function('return this')();
 
+Symbol.enumSize = Symbol.enumSize || Symbol('enumSize');
+
 // Adapted from https://github.com/doug-wade/proposal-enum-definitions
 root.PolyfilledEnum = function PolyfilledEnum(values) {
   const constructedEnum = Object.create(null, {
     [Symbol.enumSize]: {
       // Specification can define better semantics for deriving
       // and storing the size of the enum object (internal slot)
-      value: values.length
+      value: Object.keys(values).length
     },
     [Symbol.iterator]: {
       * value() {
@@ -32,23 +34,37 @@ root.PolyfilledEnum = function PolyfilledEnum(values) {
     },
     keys: {
       get: function() {
-        return function () { return Object.keys(this) };
+        return function () { return Object.keys(this); };
       },
     },
     values: {
       get: function() {
-        return function () { return Object.values(this) };
+        return function () { return Object.values(this); };
       },
     },
     entries: {
       get: function() {
-        return function () { return Object.entries(this) };
+        return function () { return Object.entries(this); };
       },
     },
-    memberOf: {
+    has: {
       get: function() {
-        return function (elem) { return Object.values(this).includes(elem) };
+        return function (elem) { return Object.values(this).includes(elem); };
       },
+    },
+    size: {
+      get: function() {
+        return function() { return this[Symbol.enumSize]; };
+      }
+    },
+    forEach: {
+      get: function() {
+        return function(callback) {
+          for (const member in Object.keys(this)) {
+            callback(member, this[member], this);
+          }
+        }
+      }
     },
   });
   for (const value in values) {
